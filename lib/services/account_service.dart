@@ -73,64 +73,59 @@ class AccountService {
     return Map<String, dynamic>.from(created);
   }
 
-  static Future<void> updateProfile({
-    String? displayName,
-    String? avatarUrl,
-    bool? onboardingCompleted,
-    String? themeMode,
-  }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    };
+  
+static Future<void> updateProfile({
+  String? displayName,
+  String? avatarUrl,
+  bool? onboardingCompleted,
+  String? themeMode,
+}) async {
+  final userId = uid;
 
-    if (displayName != null) {
-      updates['display_name'] = displayName.trim();
+  final updates = <String, dynamic>{
+    'updated_at': DateTime.now().toUtc().toIso8601String(),
+  };
+
+  if (displayName != null) {
+    final name = displayName.trim();
+
+    if (name.isEmpty) {
+      throw Exception('กรุณากรอกชื่อผู้ใช้งาน');
     }
 
-    if (avatarUrl != null) {
-      updates['avatar_url'] = avatarUrl;
-    }
-
-    if (onboardingCompleted != null) {
-      updates['onboarding_completed'] = onboardingCompleted;
-    }
-
-    if (themeMode != null) {
-      updates['theme_mode'] = themeMode;
-    }
-
-    await db.from('profiles').update(updates).eq('id', uid);
+    updates['display_name'] = name;
   }
 
-  static Future<String> uploadAvatar(XFile image) async {
-    final file = File(image.path);
-    final extension = image.path.split('.').last.toLowerCase();
-
-    const allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
-    if (!allowed.contains(extension)) {
-      throw Exception('รองรับเฉพาะไฟล์ JPG, PNG และ WEBP');
-    }
-
-    final path = '$uid/${_randomAvatarName()}.$extension';
-
-    await db.storage.from('profile-avatars').upload(
-      path,
-      file,
-      fileOptions: const FileOptions(
-        upsert: true,
-        cacheControl: '3600',
-      ),
-    );
-
-    return db.storage.from('profile-avatars').getPublicUrl(path);
+  if (avatarUrl != null) {
+    updates['avatar_url'] = avatarUrl;
   }
 
-  static Future<void> saveTheme(String mode) async {
-    if (!['light', 'dark', 'system'].contains(mode)) {
+  if (onboardingCompleted != null) {
+    updates['onboarding_completed'] =
+        onboardingCompleted;
+  }
+
+  if (themeMode != null) {
+    if (!['light', 'dark', 'system'].contains(themeMode)) {
       throw Exception('รูปแบบธีมไม่ถูกต้อง');
     }
 
-    await updateProfile(themeMode: mode);
+    updates['theme_mode'] = themeMode;
+  }
+
+  // ส่ง UPDATE และขอผลลัพธ์กลับมาตรวจสอบ
+  final result = await db
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select('id')
+      .maybeSingle();
+
+  // ถ้าไม่มีแถวถูกแก้ไข แสดงว่าไม่สามารถบันทึกได้
+  if (result == null) {
+    throw Exception(
+      'ไม่พบโปรไฟล์ที่สามารถแก้ไขได้ '
+      'กรุณาตรวจสอบข้อมูลบัญชีและ Supabase RLS Policy',
+    );
   }
 }
