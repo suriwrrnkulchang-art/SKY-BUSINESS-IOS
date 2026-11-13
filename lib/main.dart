@@ -1,4 +1,8 @@
 
+import 'services/supabase_service.dart';
+import 'services/account_service.dart';
+import 'profile/business_profile_page.dart';
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'auth/auth_gate.dart';
@@ -7,8 +11,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/supabase_service.dart';
-
 
 
 
