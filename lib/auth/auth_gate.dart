@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../services/account_service.dart';
+import '../../services/account_service.dart';
 import 'auth_pages.dart';
 import 'onboarding_page.dart';
 
