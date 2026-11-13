@@ -1,6 +1,8 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'auth/auth_gate.dart';
+import 'services/supabase_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +16,8 @@ void main() async {
 
   await initializeDateFormatting('th_TH', null);
   await initializeDateFormatting('en_US', null);
+
+  await SupabaseService.initialize();
 
   runApp(const SkyBusinessApp());
 }
@@ -304,7 +308,9 @@ class SkyBusinessApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const BusinessHome(),
+      home: AuthGate(
+     appBuilder: (context) => const BusinessHome(),
+      ),
     );
   }
 }
