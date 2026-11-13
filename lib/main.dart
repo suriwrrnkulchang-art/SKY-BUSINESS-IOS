@@ -11,16 +11,63 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 
+v
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDateFormatting('th_TH', null);
-  await initializeDateFormatting('en_US', null);
+  try {
+    await initializeDateFormatting('th_TH', null);
+    await initializeDateFormatting('en_US', null);
 
-  await SupabaseService.initialize();
+    await SupabaseService.initialize();
 
-  runApp(const SkyBusinessApp());
+    runApp(const SkyBusinessApp());
+  } catch (e, stackTrace) {
+    debugPrint('SKY BUSINESS STARTUP ERROR: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: const Color(0xFF070B14),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 55,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'SKY BUSINESS STARTUP ERROR',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  SelectableText(
+                    e.toString(),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
 
 // ============================================================
 // SKY BUSINESS — BUSINESS COMMAND CENTER
