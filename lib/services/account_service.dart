@@ -30,25 +30,31 @@ class AccountService {
 
   static String _defaultName() {
     final email = db.auth.currentUser?.email ?? '';
-
     final prefix = email.split('@').first.trim();
 
     if (prefix.isEmpty) {
-      return 'SKY BUSINESS USER';
+      return 'SKY BUSINESS';
     }
 
     return prefix;
   }
 
+  /// สร้าง Account ID รูปแบบ SKY- ตามด้วยตัวเลข 10 หลัก
+  /// ต้องบันทึกลงฐานข้อมูล ไม่สร้างใหม่ทุกครั้งที่เปิดหน้าโปรไฟล์
   static String _generateAccountCode() {
-    final userId = uid.replaceAll('-', '').toUpperCase();
+    const digits = '0123456789';
+    final random = Random.secure();
 
-    return 'SKY-$userId';
+    final number = List.generate(
+      10,
+      (_) => digits[random.nextInt(digits.length)],
+    ).join();
+
+    return 'SKY-$number';
   }
 
   static String _randomAvatarName() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
     final random = Random.secure();
 
     return List.generate(
@@ -71,22 +77,75 @@ class AccountService {
           .eq('id', userId)
           .maybeSingle();
 
+      // มีโปรไฟล์อยู่แล้ว
       if (existingProfile != null) {
-        return Map<String, dynamic>.from(existingProfile);
+        final profile = Map<String, dynamic>.from(existingProfile);
+
+        final currentCode =
+            profile['account_code']?.toString() ?? '';
+
+        // เปลี่ยนรหัสเก่าที่ไม่ใช่ SKY- ตามด้วยเลข 10 หลัก
+        if (!RegExp(r'^SKY-[0-9]{10}$').hasMatch(currentCode)) {
+          for (var attempt = 0; attempt < 5; attempt++) {
+            final newCode = _generateAccountCode();
+
+            try {
+              await db
+                  .from('profiles')
+                  .update({
+                    'account_code': newCode,
+                    'updated_at':
+                        DateTime.now().toUtc().toIso8601String(),
+                  })
+                  .eq('id', userId);
+
+              profile['account_code'] = newCode;
+              break;
+            } catch (error) {
+              if (attempt == 4) rethrow;
+            }
+          }
+        }
+
+        return profile;
       }
 
+      // ยังไม่มีโปรไฟล์: สร้างใหม่
       final newProfile = <String, dynamic>{
         'id': userId,
         'account_code': _generateAccountCode(),
         'display_name': _defaultName(),
+        'business_description': '',
+        'website_url': '',
+        'social_links': <String, String>{},
         'onboarding_completed': false,
         'theme_mode': 'dark',
       };
 
-      await db.from('profiles').upsert(
-        newProfile,
-        onConflict: 'id',
-      );
+      Object? lastError;
+
+      // ลองใหม่หาก Account ID ซ้ำ
+      for (var attempt = 0; attempt < 5; attempt++) {
+        try {
+          await db.from('profiles').upsert(
+            newProfile,
+            onConflict: 'id',
+          );
+
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+
+          if (attempt == 4) rethrow;
+
+          newProfile['account_code'] = _generateAccountCode();
+        }
+      }
+
+      if (lastError != null) {
+        throw lastError;
+      }
 
       final createdProfile = await db
           .from('profiles')
@@ -109,6 +168,9 @@ class AccountService {
   static Future<void> updateProfile({
     String? displayName,
     String? avatarUrl,
+    String? businessDescription,
+    String? websiteUrl,
+    Map<String, String>? socialLinks,
     bool? onboardingCompleted,
     String? themeMode,
   }) async {
@@ -122,7 +184,7 @@ class AccountService {
       final name = displayName.trim();
 
       if (name.isEmpty) {
-        throw Exception('ชื่อผู้ใช้งานต้องไม่เป็นค่าว่าง');
+        throw Exception('ชื่อกิจการต้องไม่เป็นค่าว่าง');
       }
 
       updates['display_name'] = name;
@@ -132,8 +194,22 @@ class AccountService {
       updates['avatar_url'] = avatarUrl;
     }
 
+    if (businessDescription != null) {
+      updates['business_description'] =
+          businessDescription.trim();
+    }
+
+    if (websiteUrl != null) {
+      updates['website_url'] = websiteUrl.trim();
+    }
+
+    if (socialLinks != null) {
+      updates['social_links'] = socialLinks;
+    }
+
     if (onboardingCompleted != null) {
-      updates['onboarding_completed'] = onboardingCompleted;
+      updates['onboarding_completed'] =
+          onboardingCompleted;
     }
 
     if (themeMode != null) {
@@ -194,7 +270,6 @@ class AccountService {
       }
 
       final fileName = _randomAvatarName();
-
       final path = '$userId/$fileName.$extension';
 
       await db.storage.from('profile-avatars').upload(
@@ -231,8 +306,6 @@ class AccountService {
       throw Exception('รูปแบบธีมไม่ถูกต้อง');
     }
 
-    await updateProfile(
-      themeMode: mode,
-    );
+    await updateProfile(themeMode: mode);
   }
 }
