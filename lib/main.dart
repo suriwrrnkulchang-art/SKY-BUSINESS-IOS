@@ -921,19 +921,49 @@ void initState() {
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          tooltip: 'หน้าหลัก',
-          onPressed: () => navigate(-1),
-          icon: const Icon(Icons.home_outlined),
+     actions: [
+  IconButton(
+    tooltip: 'หน้าหลัก',
+    onPressed: () => navigate(-1),
+    icon: const Icon(Icons.home_outlined),
+  ),
+  IconButton(
+    tooltip: 'การเงิน',
+    onPressed: () => navigate(0),
+    icon: const Icon(Icons.account_balance_wallet_outlined),
+  ),
+
+  FutureBuilder<Map<String, dynamic>>(
+    future: _profileFuture,
+    builder: (context, snapshot) {
+      final profile = snapshot.data;
+      final avatarUrl =
+          profile?['avatar_url']?.toString() ?? '';
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: InkWell(
+          onTap: _openBusinessProfile,
+          borderRadius: BorderRadius.circular(30),
+          child: CircleAvatar(
+            radius: 19,
+            backgroundColor: panel2,
+            backgroundImage: avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : null,
+            child: avatarUrl.isEmpty
+                ? const Icon(
+                    Icons.person_rounded,
+                    color: cyan,
+                    size: 22,
+                  )
+                : null,
+          ),
         ),
-        IconButton(
-          tooltip: 'การเงิน',
-          onPressed: () => navigate(0),
-          icon: const Icon(Icons.account_balance_wallet_outlined),
-        ),
-        const SizedBox(width: 8),
-      ],
+      );
+    },
+  ),
+],
     );
   }
 
