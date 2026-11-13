@@ -408,10 +408,11 @@ Future<void> _openBusinessProfile() async {
   static const companyKey = 'sky_business_company_finance_v1';
 
   @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
+void initState() {
+  super.initState();
+  _loadAccountProfile();
+  loadData();
+}
 
   Future<void> loadData() async {
     try {
