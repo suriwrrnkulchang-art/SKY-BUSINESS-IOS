@@ -1,0 +1,86 @@
+
+import 'package:flutter/material.dart';
+import 'package:business_dashboard/services/account_service.dart';
+
+class OnboardingPage extends StatefulWidget {
+  const OnboardingPage({super.key});
+
+  @override
+  State<OnboardingPage> createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage> {
+  bool loading = false;
+
+  Future<void> completeSetup() async {
+    setState(() => loading = true);
+
+    try {
+      await AccountService.updateProfile(
+        onboardingCompleted: true,
+      );
+
+      if (!mounted) return;
+
+      // แจ้ง AuthGate ให้ตรวจสอบ Profile ใหม่
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF070B14),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.rocket_launch,
+                size: 75,
+                color: Color(0xFF36D9FF),
+              ),
+              const SizedBox(height: 25),
+              const Text(
+                'WELCOME TO SKY BUSINESS',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 15),
+              const Text(
+                'ศูนย์บัญชาการธุรกิจของคุณ\nพร้อมเริ่มต้นแล้ว',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: loading ? null : completeSetup,
+                  child: loading
+                      ? const CircularProgressIndicator()
+                      : const Text('เริ่มต้นใช้งาน'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
