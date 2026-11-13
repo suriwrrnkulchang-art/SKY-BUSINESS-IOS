@@ -33,14 +33,15 @@ class AccountService {
   }
 
   static Future<Map<String, dynamic>> getProfile() async {
-    final profile = {
-  'id': uid,
-  'display_name': _defaultName(),
-  'onboarding_completed': false,
-  'theme_mode': 'dark',
-};
+    final response = await db
+        .from('profiles')
+        .select()
+        .eq('id', uid)
+        .maybeSingle();
 
-await db.from('profiles').upsert(profile);
+    if (response != null) {
+      return Map<String, dynamic>.from(response);
+    }
 
     final profile = {
       'id': uid,
