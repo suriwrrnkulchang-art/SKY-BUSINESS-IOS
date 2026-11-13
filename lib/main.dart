@@ -383,6 +383,27 @@ class _BusinessHomeState extends State<BusinessHome> {
   bool loading = true;
   String search = '';
 
+  late Future<Map<String, dynamic>> _profileFuture;
+
+void _loadAccountProfile() {
+  _profileFuture = AccountService.getProfile();
+}
+
+Future<void> _openBusinessProfile() async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const BusinessProfilePage(),
+    ),
+  );
+
+  if (!mounted) return;
+
+  setState(() {
+    _loadAccountProfile();
+  });
+}
+
   static const storageKey = 'sky_business_premium_v3';
   static const companyKey = 'sky_business_company_finance_v1';
 
