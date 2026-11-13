@@ -1,18 +1,5 @@
 
 
-$ErrorActionPreference = "Stop"
-
-$env:SUPABASE_URL = "https://uoxoporkizwporptvwvp.supabase.co"
-$env:SUPABASE_ANON_KEY = "sb_publishable_C7MgFffKDIaOn_kTbAQoSw_WxCDcELU"
-
-Write-Host "===================================="
-Write-Host "       SKY BUSINESS - CHROME"
-Write-Host "===================================="
-
-flutter run -d chrome `
-  --dart-define=SUPABASE_URL=$env:SUPABASE_URL `
-  --dart-define=SUPABASE_ANON_KEY=$env:SUPABASE_ANON_KEY
-
 
 # SKY BUSINESS - GITHUB AUTO PUSH
 
