@@ -1,53 +1,67 @@
 
-import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_service.dart';
 
 class AuthService {
-  static SupabaseClient get db => Supabase.instance.client;
+  static SupabaseClient get db => SupabaseService.client;
 
-  // สมัครด้วยอีเมลและรหัสผ่าน
   static Future<void> signUp({
     required String email,
     required String password,
+    required String confirmPassword,
   }) async {
+    final cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      throw Exception('กรุณากรอกอีเมลให้ถูกต้อง');
+    }
+
+    if (password.length < 8) {
+      throw Exception('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+    }
+
+    if (password != confirmPassword) {
+      throw Exception('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+    }
+
     await db.auth.signUp(
-      email: email.trim(),
+      email: cleanEmail,
       password: password,
     );
   }
 
-  // ยืนยัน OTP ที่ส่งไปทางอีเมล
   static Future<void> verifySignupOtp({
     required String email,
     required String otp,
   }) async {
+    if (!RegExp(r'^\d{6}$').hasMatch(otp.trim())) {
+      throw Exception('กรุณากรอกรหัส OTP 6 หลัก');
+    }
+
     await db.auth.verifyOTP(
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       token: otp.trim(),
       type: OtpType.signup,
     );
   }
 
-  // เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน
+  static Future<void> resendOtp(String email) async {
+    await db.auth.resend(
+      type: OtpType.signup,
+      email: email.trim().toLowerCase(),
+    );
+  }
+
   static Future<void> signIn({
     required String email,
     required String password,
   }) async {
     await db.auth.signInWithPassword(
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password: password,
     );
   }
 
-  // ส่ง OTP ใหม่
-  static Future<void> resendOtp(String email) async {
-    await db.auth.resend(
-      type: OtpType.signup,
-      email: email.trim(),
-    );
-  }
-
-  // เข้าสู่ระบบด้วย Google ผ่าน Supabase OAuth
   static Future<void> signInWithGoogle() async {
     await db.auth.signInWithOAuth(
       OAuthProvider.google,
@@ -55,34 +69,74 @@ class AuthService {
     );
   }
 
-  // ส่งอีเมลสำหรับรีเซ็ตรหัสผ่าน
   static Future<void> sendPasswordReset(String email) async {
     await db.auth.resetPasswordForEmail(
-      email.trim(),
+      email.trim().toLowerCase(),
       redirectTo: 'com.skybusiness.app://reset-password/',
     );
   }
 
-  // เปลี่ยนรหัสผ่านหลังผ่านขั้นตอน Recovery
-  static Future<void> updatePassword(String newPassword) async {
-    await db.auth.updateUser(
-      UserAttributes(password: newPassword),
+  static Future<void> verifyRecoveryOtp({
+    required String email,
+    required String otp,
+  }) async {
+    if (!RegExp(r'^\d{6}$').hasMatch(otp.trim())) {
+      throw Exception('กรุณากรอกรหัส OTP 6 หลัก');
+    }
+
+    await db.auth.verifyOTP(
+      email: email.trim().toLowerCase(),
+      token: otp.trim(),
+      type: OtpType.recovery,
     );
   }
 
-  // สร้าง Account ID แบบสุ่ม
-  static String generateAccountCode() {
-    final random = Random.secure();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  static Future<void> updatePassword(String password) async {
+    if (password.length < 8) {
+      throw Exception('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+    }
 
-    return List.generate(
-      12,
-      (_) => chars[random.nextInt(chars.length)],
-    ).join();
+    await db.auth.updateUser(
+      UserAttributes(password: password),
+    );
   }
 
-  // ออกจากระบบ
   static Future<void> signOut() async {
+    await db.auth.signOut();
+  }
+
+  static Future<void> enterTrial(String secretCode) async {
+    final result = await db.functions.invoke(
+      'create-trial-account',
+      body: {'secret_code': secretCode.trim()},
+    );
+
+    if (result.status != 200 || result.data == null) {
+      throw Exception('รหัสทดลองใช้ไม่ถูกต้อง');
+    }
+
+    final data = Map<String, dynamic>.from(result.data);
+
+    final email = data['email']?.toString();
+    final password = data['password']?.toString();
+
+    if (email == null || password == null) {
+      throw Exception('ไม่สามารถสร้างบัญชีทดลองใช้ได้');
+    }
+
+    await db.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+  }
+
+  static Future<void> deleteOwnAccount() async {
+    final result = await db.functions.invoke('delete-own-account');
+
+    if (result.status != 200) {
+      throw Exception('ไม่สามารถลบบัญชีได้');
+    }
+
     await db.auth.signOut();
   }
 }
