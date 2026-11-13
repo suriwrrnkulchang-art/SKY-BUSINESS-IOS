@@ -22,6 +22,12 @@ class AccountService {
     return prefix.isEmpty ? 'ผู้ใช้งาน' : prefix;
   }
 
+  // สร้างรหัสบัญชีที่ไม่ซ้ำกันจาก UUID ของผู้ใช้
+  static String _generateAccountCode() {
+    final userId = uid.replaceAll('-', '').toUpperCase();
+    return 'SKY-$userId';
+  }
+
   static String _randomAvatarName() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final random = Random.secure();
@@ -33,18 +39,23 @@ class AccountService {
   }
 
   static Future<Map<String, dynamic>> getProfile() async {
+    final userId = uid;
+
+    // ตรวจสอบโปรไฟล์เดิมก่อน
     final response = await db
         .from('profiles')
         .select()
-        .eq('id', uid)
+        .eq('id', userId)
         .maybeSingle();
 
     if (response != null) {
       return Map<String, dynamic>.from(response);
     }
 
+    // สร้างโปรไฟล์ใหม่พร้อม account_code
     final profile = {
-      'id': uid,
+      'id': userId,
+      'account_code': _generateAccountCode(),
       'display_name': _defaultName(),
       'onboarding_completed': false,
       'theme_mode': 'dark',
@@ -52,10 +63,11 @@ class AccountService {
 
     await db.from('profiles').upsert(profile);
 
+    // ดึงข้อมูลโปรไฟล์ที่สร้างสำเร็จ
     final created = await db
         .from('profiles')
         .select()
-        .eq('id', uid)
+        .eq('id', userId)
         .single();
 
     return Map<String, dynamic>.from(created);
@@ -95,6 +107,7 @@ class AccountService {
     final extension = image.path.split('.').last.toLowerCase();
 
     const allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
     if (!allowed.contains(extension)) {
       throw Exception('รองรับเฉพาะไฟล์ JPG, PNG และ WEBP');
     }
