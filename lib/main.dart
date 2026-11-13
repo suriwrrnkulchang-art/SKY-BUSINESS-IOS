@@ -21,7 +21,7 @@ void main() async {
 // SKY BUSINESS — BUSINESS COMMAND CENTER
 // ============================================================
 
-const navy = Color.fromARGB(255, 0, 72, 240);
+const navy = Color(0xFF070B14);
 const panel = Color(0xFF101827);
 const panel2 = Color(0xFF172337);
 const cyan = Color(0xFF36D9FF);
