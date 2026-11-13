@@ -883,6 +883,7 @@ void initState() {
 
   PreferredSizeWidget _buildAppBar(bool wide) {
     return AppBar(
+      
       backgroundColor: navy,
       elevation: 0,
       titleSpacing: wide ? 20 : 0,
