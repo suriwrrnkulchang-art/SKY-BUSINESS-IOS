@@ -2,15 +2,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-
   static SupabaseClient get client => Supabase.instance.client;
 
   static Future<void> initialize() async {
+    const url = String.fromEnvironment('SUPABASE_URL');
+    const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+    if (url.isEmpty || anonKey.isEmpty) {
+      throw Exception(
+        'กรุณากำหนด SUPABASE_URL และ SUPABASE_ANON_KEY',
+      );
+    }
+
     await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      url: url,
+      anonKey: anonKey,
     );
   }
 
@@ -18,7 +24,5 @@ class SupabaseService {
 
   static String? get userId => currentUser?.id;
 
-  static Future<void> signOut() async {
-    await client.auth.signOut();
-  }
+  static bool get isLoggedIn => currentUser != null;
 }
