@@ -1,0 +1,5 @@
+﻿$ErrorActionPreference = "Stop"
+flutter clean
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+flutter pub get
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
