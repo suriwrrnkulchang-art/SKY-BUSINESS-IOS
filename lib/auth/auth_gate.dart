@@ -6,13 +6,28 @@ import 'package:business_dashboard/services/account_service.dart';
 import 'login_page.dart';
 import 'onboarding_page.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   final WidgetBuilder appBuilder;
 
   const AuthGate({
     super.key,
     required this.appBuilder,
   });
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  int _profileRevision = 0;
+
+  void _reloadProfile() {
+    if (!mounted) return;
+
+    setState(() {
+      _profileRevision++;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +41,7 @@ class AuthGate extends StatelessWidget {
         }
 
         return FutureBuilder<Map<String, dynamic>>(
+          key: ValueKey(_profileRevision),
           future: AccountService.getProfile(),
           builder: (context, profileSnapshot) {
             if (profileSnapshot.connectionState ==
@@ -36,25 +52,19 @@ class AuthGate extends StatelessWidget {
             if (profileSnapshot.hasError) {
               return _ErrorScreen(
                 message: profileSnapshot.error.toString(),
-                onRetry: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => AuthGate(
-                        appBuilder: appBuilder,
-                      ),
-                    ),
-                  );
-                },
+                onRetry: _reloadProfile,
               );
             }
 
             final profile = profileSnapshot.data!;
 
             if (profile['onboarding_completed'] != true) {
-              return const OnboardingPage();
+              return OnboardingPage(
+                onCompleted: _reloadProfile,
+              );
             }
 
-            return appBuilder(context);
+            return widget.appBuilder(context);
           },
         );
       },
