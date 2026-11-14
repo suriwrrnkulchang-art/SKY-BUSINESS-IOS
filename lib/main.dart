@@ -11,7 +11,7 @@ import 'auth/auth_gate.dart';
 import 'services/supabase_service.dart';
 import 'services/account_service.dart';
 import 'profile/business_profile_page.dart';
-
+import 'settings/about_other_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
