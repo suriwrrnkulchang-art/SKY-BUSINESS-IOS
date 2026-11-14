@@ -30,7 +30,7 @@ class _BusinessProfilePageState extends State<BusinessProfilePage> {
   bool _loading = true;
   bool _saving = false;
   String? _avatarUrl;
-  
+  String _accountCode = '';
 
   @override
   void initState() {
@@ -47,43 +47,50 @@ class _BusinessProfilePageState extends State<BusinessProfilePage> {
     super.dispose();
   }
 
-  Future<void> _loadProfile() async {
-    try {
-      final profile = await AccountService.getProfile();
+  
+Future<void> _loadProfile() async {
+  if (!mounted) return;
 
-      final socialLinks =
-          Map<String, dynamic>.from(profile['social_links'] ?? {});
+  setState(() => _loading = true);
 
-      if (!mounted) return;
+  try {
+    final profile = await AccountService.getProfile();
 
-      setState(() {
-        _nameController.text =
-            profile['display_name']?.toString() ?? '';
+    if (!mounted) return;
 
-        _descriptionController.text =
-            profile['business_description']?.toString() ?? '';
+    final socialLinks = Map<String, dynamic>.from(
+      profile['social_links'] ?? {},
+    );
 
-        _websiteController.text =
-            profile['website_url']?.toString() ?? '';
+    setState(() {
+      _nameController.text =
+          profile['display_name']?.toString() ?? '';
 
-        _avatarUrl = profile['avatar_url']?.toString();
+      _descriptionController.text =
+          profile['business_description']?.toString() ?? '';
 
-        _accountCode =
-            profile['account_code']?.toString() ?? '';
+      _websiteController.text =
+          profile['website_url']?.toString() ?? '';
 
-        _socialController.text = socialLinks.entries
-            .map((entry) => '${entry.key} | ${entry.value}')
-            .join('\n');
+      _avatarUrl = profile['avatar_url']?.toString();
 
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
+      _accountCode =
+          profile['account_code']?.toString() ?? '';
 
+      _socialController.text = socialLinks.entries
+          .map((entry) => '${entry.key} | ${entry.value}')
+          .join('\n');
+    });
+  } catch (e) {
+    if (!mounted) return;
+    _showMessage('โหลดข้อมูลไม่สำเร็จ: $e');
+  } finally {
+    if (mounted) {
       setState(() => _loading = false);
-      _showMessage('โหลดข้อมูลไม่สำเร็จ: $e');
     }
   }
+}
+
 
   Map<String, String> _parseSocialLinks() {
     final result = <String, String>{};
@@ -135,43 +142,45 @@ class _BusinessProfilePageState extends State<BusinessProfilePage> {
     }
   }
 
-  Future<void> _changeAvatar() async {
-    try {
-      final picker = ImagePicker();
+  
+Future<void> _changeAvatar() async {
+  try {
+    final picker = ImagePicker();
 
-      final image = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1200,
+    );
 
-      if (image == null) return;
+    if (!mounted || image == null) return;
 
-      setState(() => _saving = true);
+    setState(() => _saving = true);
 
-      final url = await AccountService.uploadAvatar(image);
+    final url = await AccountService.uploadAvatar(image);
 
-      await AccountService.updateProfile(
-        avatarUrl: url,
-      );
+    await AccountService.updateProfile(
+      avatarUrl: url,
+    );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        _avatarUrl = url;
-      });
+    setState(() {
+      _avatarUrl = url;
+    });
 
-      _showMessage('เปลี่ยนรูปโปรไฟล์ธุรกิจแล้ว');
-    } catch (e) {
-      if (!mounted) return;
+    _showMessage('เปลี่ยนรูปโปรไฟล์ธุรกิจแล้ว');
+  } catch (e) {
+    if (!mounted) return;
 
-      _showMessage('เปลี่ยนรูปไม่สำเร็จ: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+    _showMessage('เปลี่ยนรูปไม่สำเร็จ: $e');
+  } finally {
+    if (mounted) {
+      setState(() => _saving = false);
     }
   }
+}
+
 
   Future<void> _copyAccountCode() async {
     if (_accountCode.isEmpty) return;
