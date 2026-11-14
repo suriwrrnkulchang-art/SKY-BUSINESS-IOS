@@ -69,8 +69,8 @@ class _BusinessProfilePageState extends State<BusinessProfilePage> {
         _avatarUrl = profile['avatar_url']?.toString();
 
         _accountCode =
-            profile['account_code']?.toString() ?? '';
-
+    profile['account_code']?.toString() ?? '';
+    
         _socialController.text = socialLinks.entries
             .map((entry) => '${entry.key} | ${entry.value}')
             .join('\n');
