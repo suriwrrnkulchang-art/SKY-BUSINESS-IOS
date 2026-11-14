@@ -374,6 +374,9 @@ class BusinessHome extends StatefulWidget {
 }
 
 class _BusinessHomeState extends State<BusinessHome> {
+
+
+
   final List<BusinessRecord> records = [];
   CompanyFinance company = CompanyFinance();
 
