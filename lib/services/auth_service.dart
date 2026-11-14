@@ -1,5 +1,6 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'supabase_service.dart';
 
 class AuthService {
@@ -12,7 +13,8 @@ class AuthService {
   }) async {
     final cleanEmail = email.trim().toLowerCase();
 
-    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+    if (cleanEmail.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(cleanEmail)) {
       throw Exception('กรุณากรอกอีเมลให้ถูกต้อง');
     }
 
@@ -106,9 +108,17 @@ class AuthService {
   }
 
   static Future<void> enterTrial(String secretCode) async {
+    final code = secretCode.trim();
+
+    if (code.isEmpty) {
+      throw Exception('กรุณากรอกรหัสทดลองใช้');
+    }
+
     final result = await db.functions.invoke(
       'create-trial-account',
-      body: {'secret_code': secretCode.trim()},
+      body: {
+        'secret_code': code,
+      },
     );
 
     if (result.status != 200 || result.data == null) {
@@ -120,8 +130,11 @@ class AuthService {
     final email = data['email']?.toString();
     final password = data['password']?.toString();
 
-    if (email == null || password == null) {
-      throw Exception('ไม่สามารถสร้างบัญชีทดลองใช้ได้');
+    if (email == null ||
+        email.isEmpty ||
+        password == null ||
+        password.isEmpty) {
+      throw Exception('ข้อมูลบัญชีทดลองใช้ไม่ถูกต้อง');
     }
 
     await db.auth.signInWithPassword(
