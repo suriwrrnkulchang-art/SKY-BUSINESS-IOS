@@ -374,7 +374,20 @@ class BusinessHome extends StatefulWidget {
 }
 
 class _BusinessHomeState extends State<BusinessHome> {
+Future<void> _openAboutOther() async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const AboutOtherPage(),
+    ),
+  );
 
+  if (!mounted) return;
+
+  setState(() {
+    _loadAccountProfile();
+  });
+}
 
 
   final List<BusinessRecord> records = [];
@@ -2114,94 +2127,133 @@ void initState() {
   // SETTINGS
   // ==========================================================
 
-  Widget _settingsPage() {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        heading('System Control',
-            'ตั้งค่าและจัดการข้อมูล SKY BUSINESS'),
-        const SizedBox(height: 18),
+  
+Widget _settingsPage() {
+  return ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      heading(
+        'System Control',
+        'ตั้งค่าและจัดการข้อมูล SKY BUSINESS',
+      ),
 
-        sectionCard(
-          title: 'COMPANY FINANCE SETTINGS',
+      const SizedBox(height: 18),
+
+      sectionCard(
+        title: 'COMPANY FINANCE SETTINGS',
+        color: cyan,
+        children: [
+          valueRow('เงินทุนจดทะเบียน', company.registeredCapital),
+          valueRow('เงินทุนชำระแล้ว', company.paidCapital),
+          valueRow('เงินลงทุนเจ้าของ', company.ownerInvestment),
+          valueRow('เงินลงทุนผู้ถือหุ้น', company.shareholderInvestment),
+          valueRow('เงินสด', company.cash),
+          valueRow('เงินธนาคาร', company.bank),
+
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: editCompanyFinance,
+              icon: const Icon(Icons.edit),
+              label: const Text('แก้ไขข้อมูลบริษัท'),
+            ),
+          ),
+        ],
+      ),
+
+      _settingCard(
+        Icons.backup_rounded,
+        cyan,
+        'Backup Data',
+        'คัดลอกข้อมูลทั้งหมดเป็น JSON',
+        exportBackup,
+      ),
+
+      _settingCard(
+        Icons.restore_rounded,
+        orange,
+        'Restore Data',
+        'กู้คืนข้อมูลจาก JSON Backup',
+        importBackup,
+      ),
+
+      _settingCard(
+        Icons.storage_rounded,
+        green,
+        'Local Storage',
+        '${records.length} รายการถูกจัดเก็บในอุปกรณ์',
+        null,
+      ),
+
+      const SizedBox(height: 20),
+
+      const Text(
+        'ACCOUNT & INFORMATION',
+        style: TextStyle(
           color: cyan,
-          children: [
-            valueRow('เงินทุนจดทะเบียน', company.registeredCapital),
-            valueRow('เงินทุนชำระแล้ว', company.paidCapital),
-            valueRow('เงินลงทุนเจ้าของ', company.ownerInvestment),
-            valueRow('เงินลงทุนผู้ถือหุ้น', company.shareholderInvestment),
-            valueRow('เงินสด', company.cash),
-            valueRow('เงินธนาคาร', company.bank),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: editCompanyFinance,
-                icon: const Icon(Icons.edit),
-                label: const Text('แก้ไขข้อมูลบริษัท'),
-              ),
-            ),
-          ],
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.3,
+          fontSize: 11,
         ),
+      ),
 
-        _settingCard(
-          Icons.backup_rounded,
-          cyan,
-          'Backup Data',
-          'คัดลอกข้อมูลทั้งหมดเป็น JSON',
-          exportBackup,
-        ),
-        _settingCard(
-          Icons.restore_rounded,
-          orange,
-          'Restore Data',
-          'กู้คืนข้อมูลจาก JSON Backup',
-          importBackup,
-        ),
-        _settingCard(
-          Icons.storage_rounded,
-          green,
-          'Local Storage',
-          '${records.length} รายการถูกจัดเก็บในอุปกรณ์',
-          null,
-        ),
+      const SizedBox(height: 12),
 
-        const SizedBox(height: 20),
-        const Text('SYSTEM INFORMATION',
-            style: TextStyle(
-              color: cyan,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.3,
-              fontSize: 11,
-            )),
-        const SizedBox(height: 12),
-        _infoRow('Application', 'SKY BUSINESS'),
-        _infoRow('Architecture', 'Flutter / Dart'),
-        _infoRow('Storage', 'SharedPreferences'),
-        _infoRow('Modules', '17 Systems'),
-        _infoRow('Data Sync', 'Local Only'),
-        _infoRow('Cloud Server', 'Not Connected'),
+      _settingCard(
+        Icons.info_outline_rounded,
+        cyan,
+        'เกี่ยวกับอื่นๆ',
+        'ข้อมูลบัญชี Account ID และรายละเอียดระบบ',
+        _openAboutOther,
+      ),
 
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: orange.withOpacity(.08),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: orange.withOpacity(.2)),
-          ),
-          child: const Text(
-            'ควรสำรองข้อมูลเป็นประจำ ข้อมูลเวอร์ชันนี้ '
-            'ยังไม่ได้ซิงก์ไปยัง Cloud หรืออุปกรณ์อื่นโดยอัตโนมัติ',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              height: 1.7,
-            ),
+      const SizedBox(height: 20),
+
+      const Text(
+        'SYSTEM INFORMATION',
+        style: TextStyle(
+          color: cyan,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.3,
+          fontSize: 11,
+        ),
+      ),
+
+      const SizedBox(height: 12),
+
+      _infoRow('Application', 'SKY BUSINESS'),
+      _infoRow('Architecture', 'Flutter / Dart'),
+      _infoRow('Storage', 'SharedPreferences'),
+      _infoRow('Modules', '17 Systems'),
+      _infoRow('Data Sync', 'Local Only'),
+      _infoRow('Cloud Server', 'Connected to Supabase'),
+
+      const SizedBox(height: 20),
+
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: orange.withOpacity(.08),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: orange.withOpacity(.2),
           ),
         ),
-      ],
-    );
-  }
+        child: const Text(
+          'ควรสำรองข้อมูลเป็นประจำ ข้อมูลธุรกิจในเวอร์ชันนี้ '
+          'ยังไม่ได้ซิงก์ข้อมูล Local Storage ไปยัง Cloud '
+          'หรืออุปกรณ์อื่นโดยอัตโนมัติ',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            height: 1.7,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 
   Widget _settingCard(
     IconData icon,

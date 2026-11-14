@@ -30,7 +30,7 @@ class _BusinessProfilePageState extends State<BusinessProfilePage> {
   bool _loading = true;
   bool _saving = false;
   String? _avatarUrl;
-  String _accountCode = '';
+  
 
   @override
   void initState() {
