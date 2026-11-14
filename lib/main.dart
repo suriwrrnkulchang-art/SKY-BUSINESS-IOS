@@ -13,8 +13,6 @@ import 'services/account_service.dart';
 import 'profile/business_profile_page.dart';
 
 
-
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -881,92 +879,100 @@ void initState() {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(bool wide) {
-    return AppBar(
-      
-      backgroundColor: navy,
-      elevation: 0,
-      titleSpacing: wide ? 20 : 0,
-      title: Row(
-        children: [
-          Container(
-            width: 39,
-            height: 39,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [cyan, blue]),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.bolt_rounded, color: navy),
-          ),
-          const SizedBox(width: 11),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SKY BUSINESS',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.3,
-                ),
-              ),
-              Text(
-                'BUSINESS COMMAND CENTER',
-                style: TextStyle(
-                  fontSize: 8,
-                  color: cyan,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-     actions: [
-  IconButton(
-    tooltip: 'หน้าหลัก',
-    onPressed: () => navigate(-1),
-    icon: const Icon(Icons.home_outlined),
-  ),
-  IconButton(
-    tooltip: 'การเงิน',
-    onPressed: () => navigate(0),
-    icon: const Icon(Icons.account_balance_wallet_outlined),
-  ),
+ PreferredSizeWidget _buildAppBar(bool wide) {
+  return AppBar(
+    backgroundColor: navy,
+    elevation: 0,
+    titleSpacing: wide ? 20 : 0,
 
-  FutureBuilder<Map<String, dynamic>>(
-    future: _profileFuture,
-    builder: (context, snapshot) {
-      final profile = snapshot.data;
-      final avatarUrl =
-          profile?['avatar_url']?.toString() ?? '';
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: InkWell(
-          onTap: _openBusinessProfile,
-          borderRadius: BorderRadius.circular(30),
-          child: CircleAvatar(
-            radius: 19,
-            backgroundColor: panel2,
-            backgroundImage: avatarUrl.isNotEmpty
-                ? NetworkImage(avatarUrl)
-                : null,
-            child: avatarUrl.isEmpty
-                ? const Icon(
-                    Icons.person_rounded,
-                    color: cyan,
-                    size: 22,
-                  )
-                : null,
+    title: Row(
+      children: [
+        Container(
+          width: 39,
+          height: 39,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [cyan, blue]),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.bolt_rounded,
+            color: navy,
           ),
         ),
-      );
-    },
-  ),
-],
-    );
-  }
+        const SizedBox(width: 11),
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'SKY BUSINESS',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.3,
+              ),
+            ),
+            Text(
+              'BUSINESS COMMAND CENTER',
+              style: TextStyle(
+                fontSize: 8,
+                color: cyan,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    actions: [
+      // ปุ่มหน้าหลัก
+      IconButton(
+        tooltip: 'หน้าหลัก',
+        onPressed: () => navigate(-1),
+        icon: const Icon(Icons.home_outlined),
+      ),
+
+      // ปุ่มการเงิน
+      IconButton(
+        tooltip: 'การเงิน',
+        onPressed: () => navigate(0),
+        icon: const Icon(Icons.account_balance_wallet_outlined),
+      ),
+
+      // รูปโปรไฟล์บัญชี
+      FutureBuilder<Map<String, dynamic>>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          final profile = snapshot.data;
+          final avatarUrl =
+              profile?['avatar_url']?.toString() ?? '';
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: InkWell(
+              onTap: _openBusinessProfile,
+              borderRadius: BorderRadius.circular(30),
+              child: CircleAvatar(
+                radius: 19,
+                backgroundColor: panel2,
+                backgroundImage: avatarUrl.isNotEmpty
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: avatarUrl.isEmpty
+                    ? const Icon(
+                        Icons.person_rounded,
+                        color: cyan,
+                        size: 22,
+                      )
+                    : null,
+              ),
+            ),
+          );
+        },
+      ),
+    ],
+  );
+}
 
   Widget _buildDrawer() {
     return Drawer(
